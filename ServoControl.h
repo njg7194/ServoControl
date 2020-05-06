@@ -118,6 +118,9 @@ class ServoControl
     ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200, uint8_t controlmode = POSITION);
     ~ServoControl();
     
+    void setPA(uint8_t value);
+    void setPA(uint32_t value);
+
     void angle();
     void speed();
 };
