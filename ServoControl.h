@@ -1,6 +1,15 @@
 #ifndef ServoControl_h
 #define ServoControl_h
 
+#define ARDUINO 10000
+
+#if defined(ARDUINO) && ARDUINO >= 100
+	#include "arduino.h"
+#else
+	#include "WProgram.h"
+#endif
+
+
 #include "arduino.h"
 #include <inttypes.h>
 
@@ -94,7 +103,7 @@ class ServoControl
     //communication value
     PA8_ _slavNum;              // 고유번호
     PA32_ _baudRte;              // 통신속도
-    PA8_ _comCont;              // 제어모드
+    PA8_ _comCont;              // 통신 제어모드
     PA8_ _comSwic;              // 제어선택
 
     //processing
@@ -106,6 +115,11 @@ class ServoControl
     PA8_ _DOconf[6];            // DO설정
     bool _DObuffer;             // DO버퍼
     
+    void _addrInit();           // 주소값 할당
+    void _setPA(PA8_ para, uint8_t value);
+    void _setPA(PA32_ para, uint32_t value);
+
+    bool _verify();    
     //position
 
     //speed
@@ -115,21 +129,33 @@ class ServoControl
     //torque
     
     public:
-    ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200, uint8_t controlmode = POSITION);
+    ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200);
     ~ServoControl();
+
+    void start(uint8_t controlmode = POSITION);
     
-    void setPA(uint8_t value);
-    void setPA(uint32_t value);
+    uint8_t setContmod();
 
     void angle();
     void speed();
+
 };
 
 
 
-#define COMMOD_SW 0x01A0        // 제어선택 주소
-#define COMMOD_MSK 0x1A5        // 제어마스크 주소
+#define SLAVNUM 0x00            // 고유번호 주소
+#define BAUDRATE 0x00D          // 통신속도 주소
+#define COMCONT 0x090           // 통신 제어모드 주소
+#define COMMOD_SW 0x01A0        // 통신 제어 선택 주소
+#define COMMOD_MSK 0x1A5        // 통신 제어 마스크 주소
+
+#define CONTMOD 0x002           // 모터 제어모드 주소
 #define COMSIMUL 0x01A4         // 모의제어 주소
-#define DICONF1 0x080           // DI1설정
+#define DICONF1 0x080           // DI0설정 주소
+#define NUMofDI 8               // DI설정 갯수
+#define DOCONF1 0x088           // DO0설정 주소
+#define NUMofDO 6               // DO설정 갯수
+#define ACCLERATION 0x058       // 가속도 주소
+#define DECELERATION 0x059      // 감속도 주소
 
 #endif  //ServoControl_h

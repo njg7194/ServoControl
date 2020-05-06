@@ -2,7 +2,7 @@
 #include <ModbusRtu.h>
 
 
-
+ServoControl servo1(1,19200,POSITION);
 void setup() 
 {
 
