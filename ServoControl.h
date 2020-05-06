@@ -24,7 +24,7 @@ enum COM_CONTMODE
 
 enum SRV_CONTMODE
 {
-    POSITION                     = 0,                // 
+    POSITION                    = 0,                // 
     SPEED                       = 1,                // 
     TORQUE                      = 2,                // 
     POSnSPD                     = 3,                // 
