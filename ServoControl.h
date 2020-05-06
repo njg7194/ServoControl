@@ -1,5 +1,5 @@
-#ifndef _ServoControl_
-#define _ServoControl_
+#ifndef ServoControl_h
+#define ServoControl_h
 
 #include "arduino.h"
 #include <inttypes.h>
@@ -24,7 +24,7 @@ enum COM_CONTMODE
 
 enum SRV_CONTMODE
 {
-    POSTION                     = 0,                // 
+    POSITION                     = 0,                // 
     SPEED                       = 1,                // 
     TORQUE                      = 2,                // 
     POSnSPD                     = 3,                // 
@@ -78,14 +78,14 @@ enum DO
 };
 
 const uint8_t defaultDIinit[]   = {SRV_ON, A_CLR, CWL, CCWL, EMG, POS_LOAD, ORG_SW, HOMING};
-const uint8_t positionDIinit*   = defaultDIinit;
+const uint8_t *positionDIinit   = defaultDIinit;
 const uint8_t speedDIinit[]     = {SRV_ON, A_CLR, CWL, CCWL, ZEROSPD, SPD_DIR, INTSPD1, INTSPD2};
 const uint8_t torqueDIinit[]    = {SRV_ON, A_CLR, CWL, CCWL, ZEROSPD, SPD_DIR, TL_SEL, INTSPD1, INTSPD2};
 
 const uint8_t defaultDOinit[]   = {S_RDY, ALM, COIN, BRK_OFF, ZSP, TLC};
-const uint8_t positionDOinit*   = defaultDOinit;
+const uint8_t *positionDOinit   = defaultDOinit;
 const uint8_t speedDOinit[]     = {S_RDY, ALM, AT_SPEED, BRK_OFF, ZSP, TLC};
-const uint8_t torqueDOinit*     = defaultDOinit;
+const uint8_t *torqueDOinit     = defaultDOinit;
 
 
 class ServoControl
@@ -93,7 +93,7 @@ class ServoControl
     private:
     //communication value
     PA8_ _slavNum;              // 고유번호
-    PA8_ _baudRte;              // 통신속도
+    PA32_ _baudRte;              // 통신속도
     PA8_ _comCont;              // 제어모드
     PA8_ _comSwic;              // 제어선택
 
@@ -105,7 +105,7 @@ class ServoControl
     bool _DIbuffer;             // DI버퍼
     PA8_ _DOconf[6];            // DO설정
     bool _DObuffer;             // DO버퍼
-
+    
     //position
 
     //speed
@@ -115,22 +115,18 @@ class ServoControl
     //torque
     
     public:
-    ServoControl(/* args */);
+    ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200, uint8_t controlmode = POSITION);
     ~ServoControl();
-
+    
     void angle();
     void speed();
 };
 
-ServoControl::ServoControl(/* args */)
-{
-}
 
-ServoControl::~ServoControl()
-{
-}
 
 #define COMMOD_SW 0x01A0        // 제어선택 주소
 #define COMMOD_MSK 0x1A5        // 제어마스크 주소
 #define COMSIMUL 0x01A4         // 모의제어 주소
 #define DICONF1 0x080           // DI1설정
+
+#endif  //ServoControl_h
