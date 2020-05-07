@@ -1,7 +1,7 @@
 #ifndef ServoControl_h
 #define ServoControl_h
 
-#define ARDUINO 10000
+#define ARDUINO 10000       //development on Visual code
 
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "arduino.h"
@@ -11,18 +11,21 @@
 
 
 #include "arduino.h"
+//#include <ModbusRtu.h>
 #include <inttypes.h>
 
 typedef struct
 {
     uint16_t PAaddress;
     uint8_t PAvalue;
+    bool changed = 0;
 }PA8_;
 
 typedef struct
 {
     uint16_t PAaddress;
     uint32_t PAvalue;
+    bool changed = 0;
 }PA32_;
 
 enum COM_CONTMODE
@@ -96,66 +99,71 @@ const uint8_t *positionDOinit   = defaultDOinit;
 const uint8_t speedDOinit[]     = {S_RDY, ALM, AT_SPEED, BRK_OFF, ZSP, TLC};
 const uint8_t *torqueDOinit     = defaultDOinit;
 
-
 class ServoControl
 {
     private:
     //communication value
-    PA8_ _slavNum;              // 고유번호
-    PA32_ _baudRte;              // 통신속도
-    PA8_ _comCont;              // 통신 제어모드
-    PA8_ _comSwic;              // 제어선택
+    PA8_ _slavNum;                                  // 고유번호
+    PA32_ _baudRte;                                 // 통신속도
+    PA8_ _comCont;                                  // 통신 제어모드
+    PA8_ _comSwic;                                  // 제어선택
 
     //processing
-    PA8_ _contMod;              // 모터 제어모드
-    PA8_ _comSiml;              // DI 모의제어
+    PA8_ _contMod;                                  // 모터 제어모드
+    PA8_ _comSiml;                                  // DI 모의제어
+    uint8_t _DObuffer;                              // DO버퍼
 
-    PA8_ _DIconf[8];            // DI설정
-    bool _DIbuffer;             // DI버퍼
-    PA8_ _DOconf[6];            // DO설정
-    bool _DObuffer;             // DO버퍼
+    PA8_ _DIconf[8];                                // DI설정
+    PA8_ _DIbuffer;                                 // DI버퍼
+    PA8_ _DOconf[6];                                // DO설정
+
     
-    void _addrInit();           // 주소값 할당
-    void _setPA(PA8_ para, uint8_t value);
-    void _setPA(PA32_ para, uint32_t value);
+    void _addrInit();                               // v주소값 할당
+    void _DIconfig();                               // vDI초기화(기본값)
+    
+    void _setPA(PA8_ para, uint8_t value);          // v변수 세팅
+    void _setPA(PA32_ para, uint32_t value);        // v변수 세팅
 
-    bool _verify();    
+    void _verify();
+    uint8_t nowDI(DI di);
     //position
 
     //speed
-    PA32_ _Acceleration;        // 가속도
-    PA32_ _Deceleration;        // 감속도
+    PA32_ _Acceleration;                            // 가속도
+    PA32_ _Deceleration;                            // 감속도
 
     //torque
     
     public:
     ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200);
     ~ServoControl();
-
+    void _DIconfig(uint8_t *confvalue);             // vDI초기화(유저세팅)
     void start(uint8_t controlmode = POSITION);
     
     uint8_t setContmod();
 
-    void angle();
-    void speed();
+
+    void gohome_P();                                // 원점귀환
+    void angle_P();                                 // 각도만큼 이동
+    void speed_S();                                 // 속도로 이동
 
 };
 
 
 
-#define SLAVNUM 0x00            // 고유번호 주소
-#define BAUDRATE 0x00D          // 통신속도 주소
-#define COMCONT 0x090           // 통신 제어모드 주소
-#define COMMOD_SW 0x01A0        // 통신 제어 선택 주소
-#define COMMOD_MSK 0x1A5        // 통신 제어 마스크 주소
-
-#define CONTMOD 0x002           // 모터 제어모드 주소
-#define COMSIMUL 0x01A4         // 모의제어 주소
-#define DICONF1 0x080           // DI0설정 주소
-#define NUMofDI 8               // DI설정 갯수
-#define DOCONF1 0x088           // DO0설정 주소
-#define NUMofDO 6               // DO설정 갯수
-#define ACCLERATION 0x058       // 가속도 주소
-#define DECELERATION 0x059      // 감속도 주소
+#define SLAVNUM 0x00                                // 고유번호 주소
+#define BAUDRATE 0x00D                              // 통신속도 주소
+#define COMCONT 0x090                               // 통신 제어모드 주소
+#define COMMOD_SW 0x01A0                            // 통신 제어 선택 주소
+#define COMMOD_MSK 0x1A5                            // 통신 제어 마스크 주소
+#define CONTMOD 0x002                               // 모터 제어모드 주소
+#define COMSIMUL 0x01A4                             // 모의제어 주소
+#define DICONF1 0x080                               // DI0설정 주소
+#define NUMofDI 8                                   // DI설정 갯수
+#define DOCONF1 0x088                               // DO0설정 주소
+#define NUMofDO 6                                   // DO설정 갯수
+#define DOBUFFER                    
+#define ACCLERATION 0x058                           // 가속도 주소
+#define DECELERATION 0x059                          // 감속도 주소
 
 #endif  //ServoControl_h
