@@ -2,9 +2,9 @@
 
 ServoControl::ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200)
 {
-    this->_slavNum.PAvalue=slavenum;        // 모터 고유번호 설정
-    this->_baudRte.PAvalue=baudrate;        // 통신속도 설정
-
+    this->_slavNum.PAvalue=slavenum;                    // 모터 고유번호 설정
+    this->_baudRte.PAvalue=baudrate;                    // 통신속도 설정
+    this->_comCont.PAvalue=(uint8_t)COMMUNICATION_MODE; // 통신 제어모드
 
     this->_comSwic.PAvalue=0;   
 
@@ -16,7 +16,17 @@ ServoControl::~ServoControl()
 {
 }
 
-void ServoControl::_DIconfig(uint8_t *confvalue)
+
+void ServoControl::start(SRV_CONTMODE cont = POSITION)
+{
+    this->_contMod.PAvalue=(uint8_t)cont;     // 컨트롤 방식 설정
+
+}
+
+/*
+* @brif 외부 DI설정 함수
+*/
+void ServoControl::DIconfig(uint8_t *confvalue)
 {
     for (uint8_t i = 0; i < NUMofDI; i++)
     {
@@ -24,39 +34,59 @@ void ServoControl::_DIconfig(uint8_t *confvalue)
     }
 }
 
-void ServoControl::start(uint8_t controlmode = POSITION)
+/*
+* @brif 외부 DI설정 함수
+*/
+void ServoControl::_DIconfig()
 {
-    this->_contMod.PAvalue=controlmode;
-    this->_contMod.PAvalue=controlmode;     // 컨트롤 방식 설정
-    _verify();
-}
-
-uint8_t ServoControl::setContmod()
-{
-    return this->_contMod.PAvalue;
-}
-
-void ServoControl::gohome_P()
-{
-    if (bitRead(this->_comSiml.PAvalue, nowDI(HOMING)) != true)
+    for (uint8_t i = 0; i < NUMofDI; i++)
     {
-        bitWrite(this->_comSiml.PAvalue, nowDI(HOMING), true);
+        this->_DIconf[i].PAvalue=defaultDIinit[i];
+    } 
+}
+
+/*
+* 모터 제어모드 세팅
+*/
+void ServoControl::setContmod(SRV_CONTMODE contmd)
+{
+    this->_contMod.PAvalue=(uint32_t)contmd;
+    PA_ buffer=this->_contMod;
+    if (this->_contMod.PAaddress==CONTMOD)
+    {
+        DIqueue.push(buffer);
+        
     }
-    _verify(_comSiml.);
 }
 
-void ServoControl::angle_P()
+/*
+* 서보 커멘드 전송
+*/
+void ServoControl::servoCmd(DI di)
 {
-    
+    this->_contMod.PAvalue=(uint32_t)di;
+    PA_ buffer=this->_contMod;
+    if (this->_contMod.PAaddress==CONTMOD)
+    {
+        DIqueue.push(buffer);
+        
+    }
 }
 
-void ServoControl::speed_S()
+//대기열 큐에 DI가 있는지 확인
+bool ServoControl::cmdCheck(DI di)
 {
-
+    if (DIqueue.find((uint8_t)di))
+    return true;
+    else
+    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
+* @brif 변수 주소값 초기화 함수
+*/
 void ServoControl::_addrInit()
 {
 
@@ -74,7 +104,6 @@ void ServoControl::_addrInit()
         this->_DIconf[iaddr].PAaddress=i;
         iaddr++;
     }
-    this->_DIbuffer.PAaddress=COMMOD_SW;
 
     for (uint8_t i = DOCONF1; i < NUMofDO ; i++)
     {
@@ -87,35 +116,41 @@ void ServoControl::_addrInit()
     this->_Deceleration.PAaddress=DECELERATION;
 }
 
+/*
+* @brif DI기본값 디폴트로 초기화
+*/
 void ServoControl::_DIconfig()
 {
     for (uint8_t i = 0; i < NUMofDI; i++)
     {
         this->_DIconf[i].PAvalue=defaultDIinit[i];
-    }
-    
+    } 
+}
+/*
+* @brif DO기본값 디폴트로 초기화
+*/
+void ServoControl::_DOconfig()
+{
+    for (uint8_t i = 0; i < NUMofDO; i++)
+    {
+        this->_DOconf[i].PAvalue=defaultDOinit[i];
+    } 
 }
 
-void ServoControl::_setPA(PA8_ para, uint8_t value)
+
+void ServoControl::_setPA(PA_ para, uint32_t value)
 {
     para.PAvalue=value;
 }
 
-void ServoControl::_setPA(PA32_ para, uint32_t value)
-{
-    para.PAvalue=value;
-}
-
-void ServoControl::_verify()
-{
-    
-}
-
+/*
+* @brif 해당하는 명령의 현제 세팅된 DI포트를 출력
+*/
 uint8_t ServoControl::nowDI(DI di)
 {
     for (uint8_t i = 0 ; i < NUMofDI; i++)
     {
         if (this->_DIconf[i].PAvalue==di) return i;
-        else return -1;
+        else return 0;
     }
 }

@@ -2,10 +2,10 @@
 #include <ModbusRtu.h>
 
 
-ServoControl servo1(1,19200,POSITION);
+//ServoControl servo1(1,19200);
 void setup() 
 {
-
+  //servo1.start(POSITION);
 }
 
 void loop() {

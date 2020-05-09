@@ -1,32 +1,26 @@
 #ifndef ServoControl_h
 #define ServoControl_h
 
-#define ARDUINO 10000       //development on Visual code
-
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
-#else
-	#include "WProgram.h"
-#endif
-
+//#define ARDUINO 10000       //development on Visual code
 
 #include "arduino.h"
 //#include <ModbusRtu.h>
 #include <inttypes.h>
-
-typedef struct
-{
-    uint16_t PAaddress;
-    uint8_t PAvalue;
-    bool changed = 0;
-}PA8_;
+#include "Queue.h"
 
 typedef struct
 {
     uint16_t PAaddress;
     uint32_t PAvalue;
-    bool changed = 0;
-}PA32_;
+}PA_;
+
+enum TYPE
+{
+    T_COM_CONTMODE
+    T_SRV_CONTMODE
+    T_DI
+    T_DO
+};
 
 enum COM_CONTMODE
 {
@@ -90,60 +84,60 @@ enum DO
 };
 
 const uint8_t defaultDIinit[]   = {SRV_ON, A_CLR, CWL, CCWL, EMG, POS_LOAD, ORG_SW, HOMING};
-const uint8_t *positionDIinit   = defaultDIinit;
+const uint8_t* positionDIinit   = defaultDIinit;
 const uint8_t speedDIinit[]     = {SRV_ON, A_CLR, CWL, CCWL, ZEROSPD, SPD_DIR, INTSPD1, INTSPD2};
 const uint8_t torqueDIinit[]    = {SRV_ON, A_CLR, CWL, CCWL, ZEROSPD, SPD_DIR, TL_SEL, INTSPD1, INTSPD2};
 
 const uint8_t defaultDOinit[]   = {S_RDY, ALM, COIN, BRK_OFF, ZSP, TLC};
-const uint8_t *positionDOinit   = defaultDOinit;
+const uint8_t* positionDOinit   = defaultDOinit;
 const uint8_t speedDOinit[]     = {S_RDY, ALM, AT_SPEED, BRK_OFF, ZSP, TLC};
-const uint8_t *torqueDOinit     = defaultDOinit;
+const uint8_t* torqueDOinit     = defaultDOinit;
 
 class ServoControl
 {
-    private:
+    private://////////////////////////////////////////////////////////////////
+    Queue<PA_> DIqueue = Queue<PA_>();      //DI대기열 
     //communication value
-    PA8_ _slavNum;                                  // 고유번호
-    PA32_ _baudRte;                                 // 통신속도
-    PA8_ _comCont;                                  // 통신 제어모드
-    PA8_ _comSwic;                                  // 제어선택
+    PA_ _slavNum;                                  // 고유번호
+    PA_ _baudRte;                                 // 통신속도
+    PA_ _comCont;                                  // 통신 제어모드
+    PA_ _comSwic;                                  // 제어선택
 
     //processing
-    PA8_ _contMod;                                  // 모터 제어모드
-    PA8_ _comSiml;                                  // DI 모의제어
-    uint8_t _DObuffer;                              // DO버퍼
+    PA_ _comSiml;                                  // DI 모의제어
+    PA_ _contMod;                                  // 모터 제어모드
 
-    PA8_ _DIconf[8];                                // DI설정
-    PA8_ _DIbuffer;                                 // DI버퍼
-    PA8_ _DOconf[6];                                // DO설정
+    PA_ _DIconf[8];                                // DI설정
+    PA_ _DOconf[6];                                // DO설정
+    uint8_t _DOstatus;                              // DO상태
 
+    void _addrInit();                               // 주소값 할당
+    void _DIconfig();                               // DI초기화(기본값)
+    void _DOconfig();                               // DO초기화(기본값)
     
-    void _addrInit();                               // v주소값 할당
-    void _DIconfig();                               // vDI초기화(기본값)
-    
-    void _setPA(PA8_ para, uint8_t value);          // v변수 세팅
-    void _setPA(PA32_ para, uint32_t value);        // v변수 세팅
+    void _setPA(PA_ para, uint32_t value);          // 변수 세팅
 
-    void _verify();
     uint8_t nowDI(DI di);
     //position
 
     //speed
-    PA32_ _Acceleration;                            // 가속도
-    PA32_ _Deceleration;                            // 감속도
+    PA_ _Acceleration;                            // 가속도
+    PA_ _Deceleration;                            // 감속도
 
     //torque
     
-    public:
+    public://////////////////////////////////////////////////////////////////////
     ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200);
     ~ServoControl();
-    void _DIconfig(uint8_t *confvalue);             // vDI초기화(유저세팅)
-    void start(uint8_t controlmode = POSITION);
+    void start(SRV_CONTMODE cont = POSITION);
+    void DIconfig(uint8_t *confvalue);             // vDI초기화(유저세팅)
+    void DOconfig(uint8_t *confvalue);             // DO초기화(유저세팅)
     
-    uint8_t setContmod();
+    void setContmod(SRV_CONTMODE contmd);           // 모터 제어모드 세팅
 
+    void servoCmd(DI di);                              // DI세팅
+    bool cmdCheck(DI di);                              // 대기열 큐에 DI가 있는지 확인. 
 
-    void gohome_P();                                // 원점귀환
     void angle_P();                                 // 각도만큼 이동
     void speed_S();                                 // 속도로 이동
 
@@ -155,14 +149,18 @@ class ServoControl
 #define BAUDRATE 0x00D                              // 통신속도 주소
 #define COMCONT 0x090                               // 통신 제어모드 주소
 #define COMMOD_SW 0x01A0                            // 통신 제어 선택 주소
-#define COMMOD_MSK 0x1A5                            // 통신 제어 마스크 주소
-#define CONTMOD 0x002                               // 모터 제어모드 주소
+//#define COMMOD_MSK 0x1A5                            // 통신 제어 마스크 주소
+
 #define COMSIMUL 0x01A4                             // 모의제어 주소
+#define CONTMOD 0x002                               // 모터 제어모드 주소
+
 #define DICONF1 0x080                               // DI0설정 주소
 #define NUMofDI 8                                   // DI설정 갯수
+
 #define DOCONF1 0x088                               // DO0설정 주소
 #define NUMofDO 6                                   // DO설정 갯수
-#define DOBUFFER                    
+#define DOBUFFER                                    //
+
 #define ACCLERATION 0x058                           // 가속도 주소
 #define DECELERATION 0x059                          // 감속도 주소
 
