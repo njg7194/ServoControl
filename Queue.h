@@ -35,7 +35,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include <Arduino.h>
+//#include <Arduino.h>
 
 template<class T>
 class Queue {

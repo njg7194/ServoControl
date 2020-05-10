@@ -1,14 +1,14 @@
 #include "ServoControl.h"
 #include <ModbusRtu.h>
 
+ServoControl servo(1,19200);
 
-//ServoControl servo1(1,19200);
 void setup() 
 {
-  //servo1.start(POSITION);
+
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-
+void loop() 
+{
+  PA_ buff = servo.queueExe();
 }
