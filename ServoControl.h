@@ -10,17 +10,18 @@
 
 typedef struct
 {
-    uint16_t PAaddress;
+    uint32_t PAaddress;
     uint32_t PAvalue;
+    bool check;
 }PA_;
-
+/*
 enum TYPE
 {
     T_COM_CONTMODE
     T_SRV_CONTMODE
     T_DI
     T_DO
-};
+};*/
 
 enum COM_CONTMODE
 {
@@ -96,33 +97,31 @@ const uint8_t* torqueDOinit     = defaultDOinit;
 class ServoControl
 {
     private://////////////////////////////////////////////////////////////////
-    Queue<PA_> DIqueue = Queue<PA_>();      //DI대기열 
+    Queue<PA_> PAqueue = Queue<PA_>();             //PA대기열 
     //communication value
     PA_ _slavNum;                                  // 고유번호
-    PA_ _baudRte;                                 // 통신속도
-    PA_ _comCont;                                  // 통신 제어모드
+    PA_ _baudRte;                                  // 통신속도
+    PA_ _comCont;                                  // 작동모드
     PA_ _comSwic;                                  // 제어선택
 
     //processing
     PA_ _comSiml;                                  // DI 모의제어
     PA_ _contMod;                                  // 모터 제어모드
 
-    PA_ _DIconf[8];                                // DI설정
-    PA_ _DOconf[6];                                // DO설정
+    PA_ _DIconf[8];                                 // DI설정
+    PA_ _DOconf[6];                                 // DO설정
     uint8_t _DOstatus;                              // DO상태
 
     void _addrInit();                               // 주소값 할당
     void _DIconfig();                               // DI초기화(기본값)
     void _DOconfig();                               // DO초기화(기본값)
-    
-    void _setPA(PA_ para, uint32_t value);          // 변수 세팅
 
     uint8_t nowDI(DI di);
     //position
 
     //speed
-    PA_ _Acceleration;                            // 가속도
-    PA_ _Deceleration;                            // 감속도
+    PA_ _Acceleration;                              // 가속도
+    PA_ _Deceleration;                              // 감속도
 
     //torque
     
@@ -130,13 +129,13 @@ class ServoControl
     ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200);
     ~ServoControl();
     void start(SRV_CONTMODE cont = POSITION);
-    void DIconfig(uint8_t *confvalue);             // vDI초기화(유저세팅)
-    void DOconfig(uint8_t *confvalue);             // DO초기화(유저세팅)
-    
-    void setContmod(SRV_CONTMODE contmd);           // 모터 제어모드 세팅
 
-    void servoCmd(DI di);                              // DI세팅
-    bool cmdCheck(DI di);                              // 대기열 큐에 DI가 있는지 확인. 
+    void DIconfig(const uint8_t *confvalue);       // vDI초기화(유저세팅)
+    void DOconfig(const uint8_t *confvalue);       // DO초기화(유저세팅)
+    
+    void setContmod(SRV_CONTMODE contmd);          // 모터 제어모드 세팅
+    void DIcmdSend(DI di);                         // DI 모의제어 커멘드 전송
+    PA_ queueExe(PA_* pa);
 
     void angle_P();                                 // 각도만큼 이동
     void speed_S();                                 // 속도로 이동
@@ -144,12 +143,11 @@ class ServoControl
 };
 
 
-
 #define SLAVNUM 0x00                                // 고유번호 주소
 #define BAUDRATE 0x00D                              // 통신속도 주소
-#define COMCONT 0x090                               // 통신 제어모드 주소
+#define COMCONT 0x090                               // 작동모드 주소
 #define COMMOD_SW 0x01A0                            // 통신 제어 선택 주소
-//#define COMMOD_MSK 0x1A5                            // 통신 제어 마스크 주소
+//#define COMMOD_MSK 0x1A5                          // 통신 제어 마스크 주소
 
 #define COMSIMUL 0x01A4                             // 모의제어 주소
 #define CONTMOD 0x002                               // 모터 제어모드 주소

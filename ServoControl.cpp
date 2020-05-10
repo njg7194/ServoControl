@@ -4,12 +4,13 @@ ServoControl::ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200)
 {
     this->_slavNum.PAvalue=slavenum;                    // 모터 고유번호 설정
     this->_baudRte.PAvalue=baudrate;                    // 통신속도 설정
-    this->_comCont.PAvalue=(uint8_t)COMMUNICATION_MODE; // 통신 제어모드
-
-    this->_comSwic.PAvalue=0;   
+    this->_comCont.PAvalue=(uint8_t)COMMUNICATION_MODE; // 작동모드modbus로
+    this->_comSwic.PAvalue=0b11111111;                  // 모든DI modbus작동
 
     _addrInit();
     _DIconfig();
+    _DOconfig();
+
 }
 
 ServoControl::~ServoControl()
@@ -24,9 +25,9 @@ void ServoControl::start(SRV_CONTMODE cont = POSITION)
 }
 
 /*
-* @brif 외부 DI설정 함수
+* @brif 유저 DI설정 함수
 */
-void ServoControl::DIconfig(uint8_t *confvalue)
+void ServoControl::DIconfig(const uint8_t *confvalue)
 {
     for (uint8_t i = 0; i < NUMofDI; i++)
     {
@@ -35,13 +36,13 @@ void ServoControl::DIconfig(uint8_t *confvalue)
 }
 
 /*
-* @brif 외부 DI설정 함수
+* @brif 유저 DO설정 함수
 */
-void ServoControl::_DIconfig()
+void ServoControl::DOconfig(const uint8_t* confvalue)
 {
     for (uint8_t i = 0; i < NUMofDI; i++)
     {
-        this->_DIconf[i].PAvalue=defaultDIinit[i];
+        this->_DIconf[i].PAvalue=confvalue[i];
     } 
 }
 
@@ -51,37 +52,23 @@ void ServoControl::_DIconfig()
 void ServoControl::setContmod(SRV_CONTMODE contmd)
 {
     this->_contMod.PAvalue=(uint32_t)contmd;
-    PA_ buffer=this->_contMod;
-    if (this->_contMod.PAaddress==CONTMOD)
-    {
-        DIqueue.push(buffer);
-        
-    }
+    PAqueue.push(_contMod);
 }
 
 /*
-* 서보 커멘드 전송
+* DI 모의제어 커멘드 전송
 */
-void ServoControl::servoCmd(DI di)
+void ServoControl::DIcmdSend(DI di)
 {
-    this->_contMod.PAvalue=(uint32_t)di;
-    PA_ buffer=this->_contMod;
-    if (this->_contMod.PAaddress==CONTMOD)
-    {
-        DIqueue.push(buffer);
-        
-    }
+    this->_comSiml.PAvalue=(uint32_t)di;
+    PAqueue.push(_comSiml);
 }
 
-//대기열 큐에 DI가 있는지 확인
-bool ServoControl::cmdCheck(DI di)
+PA_ ServoControl::queueExe(PA_* value)
 {
-    if (DIqueue.find((uint8_t)di))
-    return true;
-    else
-    return false;
+    //PA_ buff = PAqueue.peek().check;
+    return PAqueue.pop();
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -135,12 +122,6 @@ void ServoControl::_DOconfig()
     {
         this->_DOconf[i].PAvalue=defaultDOinit[i];
     } 
-}
-
-
-void ServoControl::_setPA(PA_ para, uint32_t value)
-{
-    para.PAvalue=value;
 }
 
 /*

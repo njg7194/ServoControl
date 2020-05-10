@@ -61,7 +61,6 @@ class Queue {
     T peek();
     T pop();
     void clear();
-    int find(const T &item);
 };
 
 template<class T>
@@ -119,17 +118,6 @@ void Queue<T>::clear()
 {
   _front = _back;
   _count = 0;
-}
-
-template<class T>
-int Queue<T>::find(const T &item)
-{
-  for (int i = 0; i < this->_maxitems; i++)
-  {
-    if (this->_data==item)
-    return i;
-  }
-  
 }
 
 #endif
