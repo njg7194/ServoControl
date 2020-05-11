@@ -126,7 +126,7 @@ class ServoControl
     //torque
     
     public://////////////////////////////////////////////////////////////////////
-    ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19200);
+    ServoControl(uint8_t slavenum = 1, uint32_t baudrate = 19300);
     ~ServoControl();
     void start(uint8_t cont = POSITION);
 
@@ -135,7 +135,7 @@ class ServoControl
     
     void setContmod(uint8_t contmd);          // 
     void DIcmdSend(uint8_t di);                         // 
-    PA_ queueExe();
+    void queueExe(PA_& pa);
 
     void angle_P();                                 // 
     void speed_S();                                 // 

@@ -1,4 +1,4 @@
 {
-    "sketch": "basic_test.ino",
+    "sketch": "basic_example.ino",
     "board": "arduino:sam:arduino_due_x_dbg"
 }

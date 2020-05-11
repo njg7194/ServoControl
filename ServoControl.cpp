@@ -78,10 +78,11 @@ void ServoControl::DIcmdSend(uint8_t di)
 /*
 * @brif 현제 큐 반환
 */
-PA_ ServoControl::queueExe()
+void ServoControl::queueExe(PA_& pa)
 {
     //PA_ buff = PAqueue.peek().check;
-    return PAqueue.pop();
+    pa = PAqueue.pop();
+    pa.check = false;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -115,6 +116,7 @@ void ServoControl::_addrInit()
     _Acceleration.PAaddress=ACCLERATION;
     _Deceleration.PAaddress=DECELERATION;
 }
+
 
 /*
 * @brif DI기본값 디폴트로 초기화

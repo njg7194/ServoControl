@@ -3,10 +3,10 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:\\Users\\노재근\\Documents\\Arduino\\libraries\\Modbus-Master-Slave-for-Arduino-master",
                 "C:\\Users\\노재근\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**",
                 "C:\\Users\\노재근\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\sam\\1.6.12\\**",
-                "C:\\Users\\노재근\\Desktop\\Git\\ServoControl\\**"
+                "C:\\Users\\노재근\\Documents\\Arduino\\libraries\\**",
+                "C:\\Users\\노재근\\OneDrive\\바탕 화면\\Git\\ServoControl"
             ],
             "forcedInclude": [
                 "C:\\Users\\노재근\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\sam\\1.6.12\\cores\\arduino\\Arduino.h"
